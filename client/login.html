@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+		<title>test game</title>
+		
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<link href='http://fonts.googleapis.com/css?family=Press+Start+2P' rel='stylesheet' type='text/css'>		
+	
+		<style>
+			body {
+				font-family: 'Press Start 2P', cursive;
+				font-size: 1.2em;
+				background: #726B7E;
+			}
+			
+			input, button {
+				font-family: 'Press Start 2P', cursive;
+				font-size: 1em;
+			}
+		
+			table.tblLoginBox {
+				border: 2px solid;
+				border-radius: 6px;
+				background: #E5E6C7;
+			}
+		</style>
+		
+		<script>
+
+window.addEventListener("load", function(event) {
+	$('#txtName').focus();
+	
+	if (localStorage.playerName) {
+		$('#txtName').val(localStorage.playerName);
+	}
+	
+	$('#txtName').bind('keypress', function(e) {
+		var code = (e.keyCode ? e.keyCode : e.which);
+		if( code == 13) { //Enter keycode
+			playGame();
+		}
+	});
+ 
+});
+
+function playGame() {
+	var name = $('#txtName').val()
+	if (!name) {
+		name = 'guest' + (Math.random() * 10000).toFixed(0);
+	}
+	localStorage.playerName = name;
+	
+	location.href = './client.html';
+}
+		</script>
+		
+	</head>
+	
+	<body>
+		<table height="400" width="100%">
+			<tr>
+				<td align="center" valign="middle">
+					<table class="tblLoginBox">
+						<tr>
+							<td align="center">Halt!  Who are you?</td>
+						</tr>
+						<tr>
+							<td align="center"><img src="./images/dwarf.png" /></td>
+						</tr>
+						<tr>
+							<td align="center"><input type="text" id="txtName" placeholder="name" /></td>
+						</tr>
+						<tr>
+							<td align="center"><button onclick="playGame()" >Play!</button></td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	
+	</body>
+</html>

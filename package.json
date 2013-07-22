@@ -1,0 +1,13 @@
+{
+  "name": "rts-game",
+  "version": "0.0.1",
+  "dependencies": {
+    "socket.io": "x",
+    "express": "3.1.x",
+	"mongodb" : "1.1.11"
+  },
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.2.x"
+  }
+}
