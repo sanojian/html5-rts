@@ -64,16 +64,17 @@ window.addEventListener("load", function(event) {
 	if (!localStorage.playerName) {
 		location.href = './login.html';
 	}
-	initComm();
 	Crafty.init(VIEW_WIDTH, VIEW_HEIGHT);
 	doCraftyInitialization();
 
-	g_hud.raphPaper = Raphael('divRaphPaper', 112, $('#cr-stage').height()/2);
+	g_hud.raphPaper = Raphael('divRaphPaper', 172, $('#cr-stage').height()/2);
 	var pos = $('#cr-stage').offset();
 	$('#divRaphPaper').css({ top: pos.top + 8, left: pos.left + $('#cr-stage').width() - $('#divRaphPaper').width() - 8 });
-	g_hud.raphPaper.rect(0, 0, g_hud.raphPaper.width, 60).attr( {fill: '#61A0EF' } );
-	g_hud.modeBar = g_hud.raphPaper.rect(0, 70, g_hud.raphPaper.width, 32).attr( {fill: '#ff0000', 'stroke-width': 2 } );
-	g_hud.modeText = g_hud.raphPaper.text($('#divRaphPaper').width()/2, 88, 'Wait').attr( { 'font-family': GAME_FONT, 'font-size': '16pt' });
+	g_hud.raphPaper.text($('#divRaphPaper').width()/2, 10, 'MountainKing').attr( { 'font-family': GAME_FONT, 'font-size': '14pt', fill: '#D9B75C', stroke: '#C39753', 'stroke-width': 1 });
+	g_hud.miniMap = g_hud.raphPaper.rect(0, 20, g_hud.raphPaper.width, g_hud.raphPaper.width * mapInfo.MAP.length/mapInfo.MAP[0].length, 4).attr( {fill: '#61A0EF', 'stroke-width': 2 } );
+	
+	g_hud.modeBar = g_hud.raphPaper.rect(0, g_hud.miniMap.attrs.y + g_hud.miniMap.attrs.height + 8, g_hud.raphPaper.width, 32).attr( {fill: '#ff0000', 'stroke-width': 2 } );
+	g_hud.modeText = g_hud.raphPaper.text($('#divRaphPaper').width()/2, g_hud.modeBar.attrs.y + g_hud.modeBar.attrs.height/2 + 2, 'Wait').attr( { 'font-family': GAME_FONT, 'font-size': '16pt' });
 	
 	g_hud.nextButton = g_hud.raphPaper.set([g_hud.raphPaper.rect(0, g_hud.modeBar.attrs.y + 64, g_hud.raphPaper.width, 32, 4).attr( {fill: '#61A0EF', 'stroke-width': 2, cursor: 'pointer' } )]);
 	g_hud.nextButton.push(g_hud.raphPaper.text(g_hud.nextButton[0].attrs.width/2, g_hud.nextButton[0].attrs.y + g_hud.nextButton[0].attrs.height/2 + 2, 'Next ->')
@@ -89,6 +90,39 @@ window.addEventListener("load", function(event) {
 	Crafty.scene("loading");	
 
 });
+
+function drawMiniTileFor(x, y) {
+	var tile = mapInfo.MAP[y].charAt(x);
+	var color = '#2F8136';
+	var size = 2;
+	
+	if (tile == '0') {
+		return;
+	}
+	else if (tile == 'g') {
+		color = '#499231';
+	}
+	else if (tile == 't') {
+		color = '#006B46';
+	}
+	else if (tile == 's') {
+		color = '#156C99';
+	}
+	else if (tile == 'h') {
+		color = '#2F8136';
+	}
+	else if (tile == 'm') {
+		color = '#7E7068';
+	}
+	else if (tile == 'v') {
+		color = '#B14E45';
+	}
+	else if (tile == 'c') {
+		color = '#D9B75C';
+	}
+	
+	g_hud.raphPaper.rect(8 + x*size, 8 + g_hud.miniMap.attrs.y + y*size, size, size).attr({ 'stroke-width': 0, fill: color });
+}
 
 function doCraftyInitialization() {
 
@@ -210,14 +244,20 @@ function doCraftyInitialization() {
 		g_selector = Crafty.e('2D, ' + RENDERING_MODE + ', selector').attr({ z : 5 });
 		g_selector.visible = false;
 		
+		initComm();
+
+		
 	});
 
 	Crafty.scene("loading", function () {
 		Crafty.background("#000");
 		try {
-		Crafty.e('2D, ' + RENDERING_MODE + ', Text').attr({ w: 800, h: 20, x: VIEW_WIDTH/2 - 400, y: VIEW_HEIGHT/2-160 })
-			.text("Loading...")
-			.css({ "text-align": "center", "font-family": GAME_FONT, "font-size": "44px" });
+		Crafty.e('2D, ' + RENDERING_MODE + ', Text').attr({ x: VIEW_WIDTH/2-130, y: VIEW_HEIGHT/2-20 })
+			.textFont({ family: GAME_FONT, size: '24pt', weight: 'bold' })
+			.textColor('#ffffff')
+			.unselectable()
+			.css({ "text-align": "center" })
+			.text("Loading...");
 		} catch (ex) {;}
 
 		Crafty.load(['./images/units_good.png','./images/units_evil.png','./images/terrain.png'], function() {
@@ -246,8 +286,18 @@ function doCraftyInitialization() {
 				tile_s: [2, 0],
 				tile_h: [3, 0],
 				tile_m: [4, 0],
-				tile_0: [5, 0]
+				tile_0: [5, 0],
+				tile_v: [6, 0],
+				tile_c: [7, 0]
 			});
+			
+			// draw mini map
+			for (var y=0;y<mapInfo.MAP.length;y++) {
+				for (var x=0;x<mapInfo.MAP[0].length;x++) {
+					drawMiniTileFor(x, y);
+				}
+			}
+
 			
 			Crafty.scene('main');
 		});
@@ -484,7 +534,6 @@ function initComm() {
 		</script>
 	</head>
 <body>
-	<div id="divMode">mode</div>
 	<div id="divCover" class="cover"></div>
 	<div id="divRaphPaper" unselectable="on" class="unselectable" style="position: absolute; z-index: 9990;"></div>
 </body>

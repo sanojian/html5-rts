@@ -42,7 +42,7 @@
 				DEFENSE: 2,
 				ATTACK: 2
 			},
-			w: {
+			s: {
 				NAME: 'swamp',
 				MOVES: 4,
 				DEFENSE: 1,
@@ -53,6 +53,18 @@
 				MOVES: 4,
 				DEFENSE: 3,
 				ATTACK: 2
+			},
+			v: {
+				NAME: 'village',
+				MOVES: 1,
+				DEFENSE: 2,
+				ATTACK: 2
+			},
+			c: {
+				NAME: 'castle',
+				MOVES: 1,
+				DEFENSE: 4,
+				ATTACK: 4
 			},
 			'0': {
 				NAME: 'ocean',
