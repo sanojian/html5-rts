@@ -89,7 +89,7 @@ var unitAttack = function(unit, bad) {
 	var terrain = g_map.MAP[bad.y].charAt(bad.x);
 	var defense = 0.1 * Math.random() * (g_gameDefs.CONSTANTS.SOLDIERS[bad.type].DEFENSE + g_gameDefs.CONSTANTS.TERRAIN[terrain].DEFENSE);
 	
-	return Math.floor(damage - defense);
+	return Math.max(0, Math.floor(damage - defense));
 
 };
 
@@ -169,8 +169,23 @@ var doGameLoop = function() {
 				}
 			}
 		}
-
 	}
+
+	// heal units in cities
+	for (var playerId in g_players) {
+		for (var i=0;i<g_players[playerId].soldiers.length;i++) {
+			var unit = g_players[playerId].soldiers[i];
+			
+			if (unit) {
+				var terrain = g_map.MAP[unit.y].charAt(unit.x);
+				if (terrain == 'v' || terrain == 'c') {
+					// heal unit
+					unit.str = Math.min(8, unit.str + (terrain == 'v' ? 1 : 1));
+					io.sockets.emit('UPDATE', unit);
+				}
+			}
+		}
+	}				
 	
 	setTimeout(doGameLoop, g_mode == MODE_COMBAT ? 1000 : 5000);
 };

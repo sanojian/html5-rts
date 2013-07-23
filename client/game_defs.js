@@ -27,42 +27,49 @@
 			g: {
 				NAME: 'grass',
 				MOVES: 1,
+				MOUNTED: 1,
 				DEFENSE: 1,
 				ATTACK: 1
 			},
 			t: {
 				NAME: 'forest',
 				MOVES: 2,
+				MOUNTED: 2,
 				DEFENSE: 2,
 				ATTACK: 1
 			},
 			h: {
 				NAME: 'hills',
 				MOVES: 2,
+				MOUNTED: 2,
 				DEFENSE: 2,
 				ATTACK: 2
 			},
 			s: {
 				NAME: 'swamp',
-				MOVES: 4,
+				MOVES: 2,
+				MOUNTED: 4,
 				DEFENSE: 1,
 				ATTACK: 1
 			},
 			m: {
 				NAME: 'mountains',
-				MOVES: 4,
+				MOVES: 2,
+				MOUNTED: 4,
 				DEFENSE: 3,
 				ATTACK: 2
 			},
 			v: {
 				NAME: 'village',
 				MOVES: 1,
+				MOUNTED: 1,
 				DEFENSE: 2,
 				ATTACK: 2
 			},
 			c: {
 				NAME: 'castle',
 				MOVES: 1,
+				MOUNTED: 1,
 				DEFENSE: 4,
 				ATTACK: 4
 			},

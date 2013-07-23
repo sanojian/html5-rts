@@ -121,7 +121,7 @@ function drawMiniTileFor(x, y) {
 		color = '#D9B75C';
 	}
 	
-	g_hud.raphPaper.rect(8 + x*size, 8 + g_hud.miniMap.attrs.y + y*size, size, size).attr({ 'stroke-width': 0, fill: color });
+	g_hud.raphPaper.rect(8 + x*size, 4 + g_hud.miniMap.attrs.y + y*size, size, size).attr({ 'stroke-width': 0, fill: color });
 }
 
 function doCraftyInitialization() {
@@ -170,7 +170,7 @@ function doCraftyInitialization() {
 			g_selectedUnit = this.unitId;
 			g_selector.attr({ x: this.x, y: this.y, z: this.z-1 });
 			g_selector.visible = true;
-			var reachable = getReachableTiles(this.locX, this.locY, this.movesLeft);
+			var reachable = getReachableTiles(this, this.movesLeft);
 			toggleReachableTiles(true, reachable);
 			if (bCenter) {
 				// pan camera to unit
@@ -306,36 +306,85 @@ function doCraftyInitialization() {
 		
 }
 
-function getReachableTiles(locX, locY, iMoves) {
+function fillOneBadAdjacentTile(badAdjacent, bads, bad, x, y) {
+	if (badAdjacent[y][x] && badAdjacent[y][x].badHere) {
+		return;
+	}
+	else {
+		badAdjacent[y][x] = true;
+	}
+}
+
+function getReachableTiles(unit, iMoves) {
+
+	// build location array of enemies
+	var bads = {};
+	for (var key in g_players) {
+		if (key != g_myId) {
+			for (var i=0;i<g_players[key].soldiers.length;i++) {
+				if (g_players[key].soldiers[i]) {
+					bads[g_players[key].soldiers[i].y] = bads[g_players[key].soldiers[i].y] ? bads[g_players[key].soldiers[i].y] : {};
+					bads[g_players[key].soldiers[i].y][g_players[key].soldiers[i].x] = g_players[key].soldiers[i];
+				}
+			}
+		}
+	}
+
+	// get tiles adjacent to enemies
+	var badAdjacent = new Object();
+	for (var j in bads) {
+		j = parseInt(j, 10);
+		badAdjacent[j-1] = badAdjacent[j-1] ? badAdjacent[j-1] : new Object();
+		badAdjacent[j] = badAdjacent[j] ? badAdjacent[j] : new Object();
+		badAdjacent[j+1] = badAdjacent[j+1] ? badAdjacent[j-1] : new Object();
+		for (var i in bads[j]) {
+			i = parseInt(i, 10);
+			//fillOneBadAdjacentTile(badAdjacent, bads, bads[j][i], i, j); 
+			badAdjacent[j][i] = { badHere: true };
+			fillOneBadAdjacentTile(badAdjacent, bads, bads[j][i], i-(j%2 ? 0 : 1), j-1);
+			fillOneBadAdjacentTile(badAdjacent, bads, bads[j][i], i+(j%2 ? 1 : 0), j-1);
+			fillOneBadAdjacentTile(badAdjacent, bads, bads[j][i], i-1, j);
+			fillOneBadAdjacentTile(badAdjacent, bads, bads[j][i], i+1, j);
+			fillOneBadAdjacentTile(badAdjacent, bads, bads[j][i], i-(j%2 ? 0 : 1), j+1);
+			fillOneBadAdjacentTile(badAdjacent, bads, bads[j][i], i+(j%2 ? 1 : 0), j+1);
+		}
+	}
 
 	var reachable = new Object();
-	reachable = simMoveToTile(locX, locY, locX-(locY%2 ? 0 : 1), locY-1, "7", reachable, iMoves);
-	reachable = simMoveToTile(locX, locY, locX+(locY%2 ? 1 : 0), locY-1, "9", reachable, iMoves);
-	reachable = simMoveToTile(locX, locY, locX-1, locY, "4", reachable, iMoves);
-	reachable = simMoveToTile(locX, locY, locX+1, locY, "6", reachable, iMoves);
-	reachable = simMoveToTile(locX, locY, locX-(locY%2 ? 0 : 1), locY+1, "1", reachable, iMoves);
-	reachable = simMoveToTile(locX, locY, locX+(locY%2 ? 1 : 0), locY+1, "3", reachable, iMoves);
+	var locX = unit.locX;
+	var locY = unit.locY;
+	reachable = simMoveToTile(unit, badAdjacent, locX-(locY%2 ? 0 : 1), locY-1, "7", reachable, iMoves);
+	reachable = simMoveToTile(unit, badAdjacent, locX+(locY%2 ? 1 : 0), locY-1, "9", reachable, iMoves);
+	reachable = simMoveToTile(unit, badAdjacent, locX-1, locY, "4", reachable, iMoves);
+	reachable = simMoveToTile(unit, badAdjacent, locX+1, locY, "6", reachable, iMoves);
+	reachable = simMoveToTile(unit, badAdjacent, locX-(locY%2 ? 0 : 1), locY+1, "1", reachable, iMoves);
+	reachable = simMoveToTile(unit, badAdjacent, locX+(locY%2 ? 1 : 0), locY+1, "3", reachable, iMoves);
 	
 	return reachable;
 }
 
-function simMoveToTile(origX, origY, x, y, path, reachable, iMovesLeft) {
+function simMoveToTile(unit, badAdjacent, x, y, path, reachable, iMovesLeft) {
 	
 	if (x < 0 || x > mapInfo.MAP[0].length || y < 0 || y > mapInfo.MAP.length)
 		return reachable;	// off edge
 	else if (!mapInfo.MAP[y])
 		return reachable;
-	else if (origX == x && origY == y)
+	else if (unit.locX == x && unit.locY == y)
 		return reachable;	// started here
 	else if (iMovesLeft == 0)
 		return reachable;	// nothing left
 	
 	//var cost = g_terrainCost[g_mapData[y][x]];
 	var cost = gameDefs.CONSTANTS.TERRAIN[mapInfo.MAP[y].charAt(x)].MOVES;
-	//if (badAdjacent[y] && badAdjacent[y][x] && badAdjacent[y][x].badHere)	
-	//	cost = 100;			// bad here
-	//else if (badAdjacent[y] && badAdjacent[y][x])
-	//	cost = Math.max(cost,iMovesLeft);	// adjacent to bad
+	if (unit.type == 'cavalry') {
+		cost = gameDefs.CONSTANTS.TERRAIN[mapInfo.MAP[y].charAt(x)].MOUNTED;
+	}
+	if (badAdjacent[y] && badAdjacent[y][x] && badAdjacent[y][x].badHere) {
+		cost = 100;			// bad here
+	}
+	else if (badAdjacent[y] && badAdjacent[y][x]) {
+		cost = Math.max(cost, iMovesLeft);	// adjacent to bad
+	}
 		
 	if (iMovesLeft >= cost) {
 		reachable[y] = reachable[y] ? reachable[y] : new Object();			
@@ -356,11 +405,11 @@ function simMoveToTile(origX, origY, x, y, path, reachable, iMovesLeft) {
 		for (var i=-1;i<=1;i++) 
 			if (!(j==0 && i==0)) {
 				if (j && i==-1)
-					reachable = simMoveToTile(origX, origY, x-(y%2 ? 0 : 1), y+j, path+getPathForDir(i,j), reachable, reachable[y][x].movesLeft);
+					reachable = simMoveToTile(unit, badAdjacent, x-(y%2 ? 0 : 1), y+j, path+getPathForDir(i,j), reachable, reachable[y][x].movesLeft);
 				else if (j && i==1)
-					reachable = simMoveToTile(origX, origY, x+(y%2 ? 1 : 0), y+j, path+getPathForDir(i,j), reachable, reachable[y][x].movesLeft);
+					reachable = simMoveToTile(unit, badAdjacent, x+(y%2 ? 1 : 0), y+j, path+getPathForDir(i,j), reachable, reachable[y][x].movesLeft);
 				else
-					reachable = simMoveToTile(origX, origY, x+i, y+j, path+getPathForDir(i,j), reachable, reachable[y][x].movesLeft);
+					reachable = simMoveToTile(unit, badAdjacent, x+i, y+j, path+getPathForDir(i,j), reachable, reachable[y][x].movesLeft);
 			}
 			
 	return reachable;
