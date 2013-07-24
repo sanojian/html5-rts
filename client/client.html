@@ -68,9 +68,12 @@ window.addEventListener("load", function(event) {
 	Crafty.init(VIEW_WIDTH, VIEW_HEIGHT);
 	doCraftyInitialization();
 
-	g_hud.raphPaper = Raphael('divRaphPaper', 172, $('#cr-stage').height()/2);
+	g_hud.raphPaper = Raphael('divRaphPaper', 172, 400);
+	g_hud.raphPaper2 = Raphael('divRaphPaper2', $('#cr-stage').width(), 32);
 	var pos = $('#cr-stage').offset();
 	$('#divRaphPaper').css({ top: pos.top + 8, left: pos.left + $('#cr-stage').width() - $('#divRaphPaper').width() - 8 });
+	$('#divRaphPaper2').css({ top: pos.top + $('#cr-stage').height() - 32, left: pos.left });
+	
 	g_hud.raphPaper.text($('#divRaphPaper').width()/2, 10, 'MountainKing').attr( { 'font-family': GAME_FONT, 'font-size': '14pt', fill: '#D9B75C', stroke: '#C39753', 'stroke-width': 1 });
 	g_hud.miniMap = g_hud.raphPaper.rect(0, 20, g_hud.raphPaper.width, g_hud.raphPaper.width * mapInfo.MAP.length/mapInfo.MAP[0].length, 4).attr( {fill: '#61A0EF', 'stroke-width': 2 } );
 	g_hud.miniMapScreen = g_hud.raphPaper.rect(8, 4 + g_hud.miniMap.attrs.y, 3*VIEW_WIDTH/TILE_SIZE, 3*VIEW_HEIGHT/TILE_SIZE).attr( {fill: '#83C6FF', stroke: '#83C6FF', opacity: 0.3 } );
@@ -88,28 +91,33 @@ window.addEventListener("load", function(event) {
 		}
 		g_players[g_myId].soldiers[g_selectedUnit].entity.doSelect(true);
 	});
+	g_hud.nextButton.hide();
 	
 	var propsLabel = { 'font-family': GAME_FONT, 'font-size': '10pt', fill: '#AE764B', stroke: '#AE764B' };
 	var propsProp = { 'font-family': GAME_FONT, 'font-size': '10pt', fill: '#C39753', stroke: '#C39753' };
 	
+	var startX = 3*$('#divRaphPaper').width()/4;
 	g_hud.terrainInfo = g_hud.raphPaper.set();
-	g_hud.terrainInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2, g_hud.nextButton[0].attrs.y + 64, '???').attr( propsLabel));
-	g_hud.terrainInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 32, g_hud.terrainInfo[0].attrs.y + 20, 'D:').attr( propsLabel));
-	g_hud.terrainInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 16, g_hud.terrainInfo[0].attrs.y + 20, '?').attr( propsProp));
-	g_hud.terrainInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 16, g_hud.terrainInfo[0].attrs.y + 20, 'M:').attr( propsLabel));
-	g_hud.terrainInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 32, g_hud.terrainInfo[0].attrs.y + 20, '?').attr( propsProp));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX, g_hud.nextButton[0].attrs.y + 64, '???').attr( propsLabel));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX - 32, g_hud.terrainInfo[0].attrs.y + 20, 'D:').attr( propsLabel));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX - 16, g_hud.terrainInfo[0].attrs.y + 20, '?').attr( propsProp));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX + 16, g_hud.terrainInfo[0].attrs.y + 20, 'M:').attr( propsLabel));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX + 32, g_hud.terrainInfo[0].attrs.y + 20, '?').attr( propsProp));
 	g_hud.terrainInfo.hide();
 	
 	g_hud.unitInfo = g_hud.raphPaper.set();
-	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2, g_hud.nextButton[0].attrs.y + 64, '???').attr( propsLabel));
-	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 32, g_hud.unitInfo[0].attrs.y + 20, 'A:').attr( propsLabel));
-	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 16, g_hud.unitInfo[0].attrs.y + 20, '?').attr( propsProp));
-	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 16, g_hud.unitInfo[0].attrs.y + 20, 'M:').attr( propsLabel));
-	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 32, g_hud.unitInfo[0].attrs.y + 20, '?').attr( propsProp));
-	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 32, g_hud.unitInfo[0].attrs.y + 40, 'D:').attr( propsLabel));
-	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 16, g_hud.unitInfo[0].attrs.y + 40, '?').attr( propsProp));
-	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 16, g_hud.unitInfo[0].attrs.y + 40, 'R:').attr( propsLabel));
-	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 32, g_hud.unitInfo[0].attrs.y + 40, '?').attr( propsProp));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX, g_hud.nextButton[0].attrs.y + 64, '???').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX - 32, g_hud.unitInfo[0].attrs.y + 20, 'A:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX - 16, g_hud.unitInfo[0].attrs.y + 20, '?').attr( propsProp));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 16, g_hud.unitInfo[0].attrs.y + 20, 'M:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 32, g_hud.unitInfo[0].attrs.y + 20, '?').attr( propsProp));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX - 32, g_hud.unitInfo[0].attrs.y + 40, 'D:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX - 16, g_hud.unitInfo[0].attrs.y + 40, '?').attr( propsProp));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 16, g_hud.unitInfo[0].attrs.y + 40, 'R:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 32, g_hud.unitInfo[0].attrs.y + 40, '?').attr( propsProp));
+	
+	g_hud.winText = g_hud.raphPaper2.text($('#divRaphPaper2').width()/2, 16, 'Hail King ???')
+						.attr({ 'font-family': GAME_FONT, 'font-size': '14pt', fill: '#D9B75C', stroke: '#D9B75C' } );
 	g_hud.unitInfo.hide();
 	
 	Crafty.scene("loading");	
@@ -280,6 +288,11 @@ function doCraftyInitialization() {
 			this.counter.attr({ z: 6 + tileY*10 });	
 			this.locX = tileX;
 			this.locY = tileY;
+			// check if winner
+			if (mapInfo.MAP[this.locY] && mapInfo.MAP[this.locY].charAt(this.locX) == 'c') {
+				// winner!
+				g_hud.winText.attr({ text: 'Hail King ' + g_players[this.playerId].name + '!' });
+			}
 		},
 		
 		updateStats: function(str, xp) {
@@ -668,5 +681,6 @@ function initComm() {
 <body>
 	<div id="divCover" class="cover"></div>
 	<div id="divRaphPaper" unselectable="on" class="unselectable" style="position: absolute; z-index: 9990;"></div>
+	<div id="divRaphPaper2" unselectable="on" class="unselectable" style="position: absolute; z-index: 9990;"></div>
 </body>
 </html>	
