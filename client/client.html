@@ -47,7 +47,7 @@ var g_players = {};
 var RENDERING_MODE = 'DOM';//'Canvas';
 var GAME_FONT = "'Press Start 2P', cursive";//'"Arial"';//"Gorditas", cursive';
 var VIEW_WIDTH = 800;
-var VIEW_HEIGHT = 480;
+var VIEW_HEIGHT = 600;
 var TILE_SIZE = 64;
 var MODE_COMBAT = 0;
 var MODE_MOVEMENT = 1;
@@ -58,6 +58,7 @@ var g_hud = {};
 var g_selectedUnit = -1;
 var g_selector = undefined;
 var g_highlights = [];
+var g_mapTiles = [];
 
 // Initialize everything when the window finishes loading
 window.addEventListener("load", function(event) {
@@ -72,6 +73,7 @@ window.addEventListener("load", function(event) {
 	$('#divRaphPaper').css({ top: pos.top + 8, left: pos.left + $('#cr-stage').width() - $('#divRaphPaper').width() - 8 });
 	g_hud.raphPaper.text($('#divRaphPaper').width()/2, 10, 'MountainKing').attr( { 'font-family': GAME_FONT, 'font-size': '14pt', fill: '#D9B75C', stroke: '#C39753', 'stroke-width': 1 });
 	g_hud.miniMap = g_hud.raphPaper.rect(0, 20, g_hud.raphPaper.width, g_hud.raphPaper.width * mapInfo.MAP.length/mapInfo.MAP[0].length, 4).attr( {fill: '#61A0EF', 'stroke-width': 2 } );
+	g_hud.miniMapScreen = g_hud.raphPaper.rect(8, 4 + g_hud.miniMap.attrs.y, 3*VIEW_WIDTH/TILE_SIZE, 3*VIEW_HEIGHT/TILE_SIZE).attr( {fill: '#83C6FF', stroke: '#83C6FF', opacity: 0.3 } );
 	
 	g_hud.modeBar = g_hud.raphPaper.rect(0, g_hud.miniMap.attrs.y + g_hud.miniMap.attrs.height + 8, g_hud.raphPaper.width, 32).attr( {fill: '#ff0000', 'stroke-width': 2 } );
 	g_hud.modeText = g_hud.raphPaper.text($('#divRaphPaper').width()/2, g_hud.modeBar.attrs.y + g_hud.modeBar.attrs.height/2 + 2, 'Wait').attr( { 'font-family': GAME_FONT, 'font-size': '16pt' });
@@ -87,6 +89,29 @@ window.addEventListener("load", function(event) {
 		g_players[g_myId].soldiers[g_selectedUnit].entity.doSelect(true);
 	});
 	
+	var propsLabel = { 'font-family': GAME_FONT, 'font-size': '10pt', fill: '#AE764B', stroke: '#AE764B' };
+	var propsProp = { 'font-family': GAME_FONT, 'font-size': '10pt', fill: '#C39753', stroke: '#C39753' };
+	
+	g_hud.terrainInfo = g_hud.raphPaper.set();
+	g_hud.terrainInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2, g_hud.nextButton[0].attrs.y + 64, '???').attr( propsLabel));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 32, g_hud.terrainInfo[0].attrs.y + 20, 'D:').attr( propsLabel));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 16, g_hud.terrainInfo[0].attrs.y + 20, '?').attr( propsProp));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 16, g_hud.terrainInfo[0].attrs.y + 20, 'M:').attr( propsLabel));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 32, g_hud.terrainInfo[0].attrs.y + 20, '?').attr( propsProp));
+	g_hud.terrainInfo.hide();
+	
+	g_hud.unitInfo = g_hud.raphPaper.set();
+	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2, g_hud.nextButton[0].attrs.y + 64, '???').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 32, g_hud.unitInfo[0].attrs.y + 20, 'A:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 16, g_hud.unitInfo[0].attrs.y + 20, '?').attr( propsProp));
+	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 16, g_hud.unitInfo[0].attrs.y + 20, 'M:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 32, g_hud.unitInfo[0].attrs.y + 20, '?').attr( propsProp));
+	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 32, g_hud.unitInfo[0].attrs.y + 40, 'D:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 - 16, g_hud.unitInfo[0].attrs.y + 40, '?').attr( propsProp));
+	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 16, g_hud.unitInfo[0].attrs.y + 40, 'R:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text($('#divRaphPaper').width()/2 + 32, g_hud.unitInfo[0].attrs.y + 40, '?').attr( propsProp));
+	g_hud.unitInfo.hide();
+	
 	Crafty.scene("loading");	
 
 });
@@ -94,7 +119,7 @@ window.addEventListener("load", function(event) {
 function drawMiniTileFor(x, y) {
 	var tile = mapInfo.MAP[y].charAt(x);
 	var color = '#2F8136';
-	var size = 2;
+	var size = 3;
 	
 	if (tile == '0') {
 		return;
@@ -126,12 +151,41 @@ function drawMiniTileFor(x, y) {
 
 function doCraftyInitialization() {
 
+
+	Crafty.c('MapTile', {
+		terrain: '0',
+	
+		MapTile: function(type) {
+			this.requires('Mouse')
+				.bind('MouseOver', function(evt) {
+					this.showInfo();
+				})
+				.areaMap([0,TILE_SIZE/4],[TILE_SIZE/2,0],[TILE_SIZE-1,TILE_SIZE/4],[TILE_SIZE-1,3*TILE_SIZE/4],[TILE_SIZE/2,TILE_SIZE-1],[0,3*TILE_SIZE/4])
+
+			this.terrain = type;
+		
+			return this;
+		},
+		
+		showInfo: function() {
+			g_hud.unitInfo.hide();
+			g_hud.terrainInfo[0].attr({ text: gameDefs.CONSTANTS.TERRAIN[this.terrain].NAME });
+			g_hud.terrainInfo[2].attr({ text: gameDefs.CONSTANTS.TERRAIN[this.terrain].DEFENSE });
+			g_hud.terrainInfo[4].attr({ text: gameDefs.CONSTANTS.TERRAIN[this.terrain].MOVES });
+			g_hud.terrainInfo.show();
+		
+		}
+	});
+
 	Crafty.c('MapLoc', {
 		gameData: {},
 	
 		MapLoc: function() {
 		
 			this.requires('Mouse')
+				.bind('MouseOver', function(evt) {
+					g_mapTiles[this.gameData.locY][this.gameData.locX].showInfo();
+				})
 				.bind('MouseDown', function(evt) {
 					if (g_mode == MODE_COMBAT) {
 						return;
@@ -154,11 +208,11 @@ function doCraftyInitialization() {
 		unitId: -1,
 	
 		PlayerUnit: function(id, str, xp, myType) {
-			this.requires('Soldier, Mouse')
+			this.requires('Soldier')
 				.bind('MouseDown', function(evt) {
 					this.doSelect(true);
 				})
-				.Soldier(str, xp, myType)
+				.Soldier(str, xp, myType, g_myId)
 		
 			this.counter.textColor('#000000');
 			this.unitId = id;
@@ -173,6 +227,8 @@ function doCraftyInitialization() {
 			var reachable = getReachableTiles(this, this.movesLeft);
 			toggleReachableTiles(true, reachable);
 			if (bCenter) {
+				g_hud.miniMapScreen.attr({ x: 8 + this.locX*3 - g_hud.miniMapScreen.attrs.width/2, y: 4 + g_hud.miniMap.attrs.y + this.locY*3 - g_hud.miniMapScreen.attrs.height/2 });
+
 				// pan camera to unit
 				var new_x = this.x + this.w / 2 - Crafty.viewport.width / 2 + Crafty.viewport.x;
 				var new_y = this.y + this.h / 2 - Crafty.viewport.height / 2 + Crafty.viewport.y;
@@ -191,12 +247,20 @@ function doCraftyInitialization() {
 		movesLeft: -1,
 		locX: -1,
 		locY: -1,
+		playerId: -1,
 		
-		Soldier: function(str, xp, myType) {
-		
+		Soldier: function(str, xp, myType, player) {
+			this.requires('Mouse')
+				.bind('MouseOver', function(evt) {
+					this.showInfo();
+				})
+				.areaMap([0,TILE_SIZE/4],[TILE_SIZE/2,0],[TILE_SIZE-1,TILE_SIZE/4],[TILE_SIZE-1,3*TILE_SIZE/4],[TILE_SIZE/2,TILE_SIZE-1],[0,3*TILE_SIZE/4])
+			
+			
 			this.strength = str;
 			this.experience = str;
 			this.type = myType;
+			this.playerId = player;
 			this.movesLeft = gameDefs.CONSTANTS.SOLDIERS[this.type].MOVES;
 			this.counter = Crafty.e('2D, ' + RENDERING_MODE + ', Text').attr({  x: 50, y: 15, z: 100 })
 				.textFont({ family: GAME_FONT, size: '8pt', weight: 'bold' })
@@ -222,16 +286,30 @@ function doCraftyInitialization() {
 			this.strength = str;
 			this.experience = str;
 			this.counter.text(str);
+		},
+	
+		showInfo: function() {
+			g_hud.terrainInfo.hide();
+			g_hud.unitInfo[0].attr({ text: g_players[this.playerId].name });
+			g_hud.unitInfo[2].attr({ text: gameDefs.CONSTANTS.SOLDIERS[this.type].ATTACK });
+			g_hud.unitInfo[4].attr({ text: gameDefs.CONSTANTS.SOLDIERS[this.type].MOVES });
+			g_hud.unitInfo[6].attr({ text: gameDefs.CONSTANTS.SOLDIERS[this.type].DEFENSE });
+			g_hud.unitInfo[8].attr({ text: gameDefs.CONSTANTS.SOLDIERS[this.type].RANGE });
+			g_hud.unitInfo.show();
+		
 		}
+	
 	});
 
 	Crafty.scene("main", function () {
 		Crafty.background("#5A72DD");
 		for (var y=0;y<mapInfo.MAP.length;y++) {
+			g_mapTiles[y] = [];
 			for (var x=0;x<mapInfo.MAP[0].length;x++) {
 				var id = mapInfo.MAP[y].charAt(x);
-				Crafty.e('2D, ' + RENDERING_MODE + ', tile_' + id)
-					.attr({ x: x * TILE_SIZE + (y%2 ? TILE_SIZE/2 : 0), y: y * 3*TILE_SIZE/4, z: 1+y*10 });
+				g_mapTiles[y][x] = Crafty.e('2D, ' + RENDERING_MODE + ', MapTile, tile_' + id)
+									.attr({ x: x * TILE_SIZE + (y%2 ? TILE_SIZE/2 : 0), y: y * 3*TILE_SIZE/4, z: 1+y*10 })
+									.MapTile(id);
 			}
 		}
 		
@@ -297,7 +375,7 @@ function doCraftyInitialization() {
 					drawMiniTileFor(x, y);
 				}
 			}
-
+			g_hud.miniMapScreen.toFront();
 			
 			Crafty.scene('main');
 		});
@@ -467,11 +545,11 @@ function initPlayer(key) {
 				// create this unit
 				if (key == g_myId) {
 					g_players[key].soldiers[i].entity = Crafty.e('2D, ' + RENDERING_MODE + ',' + g_players[key].soldiers[i].type + ', PlayerUnit' )
-						.PlayerUnit(i, g_players[key].soldiers[i].str, g_players[key].soldiers[i].xp, g_players[key].soldiers[i].type);
+						.PlayerUnit(i, g_players[key].soldiers[i].str, g_players[key].soldiers[i].xp, g_players[key].soldiers[i].type, key);
 				}
 				else {
 					g_players[key].soldiers[i].entity = Crafty.e('2D, ' + RENDERING_MODE + ',Soldier, ' + g_players[key].soldiers[i].type + '_evil' )
-						.Soldier(g_players[key].soldiers[i].str, g_players[key].soldiers[i].xp, g_players[key].soldiers[i].type);
+						.Soldier(g_players[key].soldiers[i].str, g_players[key].soldiers[i].xp, g_players[key].soldiers[i].type, key);
 				}
 			}
 			g_players[key].soldiers[i].entity.moveTo(g_players[key].soldiers[i].x, g_players[key].soldiers[i].y);
@@ -522,9 +600,11 @@ function initComm() {
 
 		if (data == MODE_MOVEMENT) {
 			// give all units their movement points back
-			for (var i=0;i<g_players[g_myId].soldiers.length;i++) {
-				if (g_players[g_myId].soldiers[i]) {
-					g_players[g_myId].soldiers[i].entity.movesLeft = gameDefs.CONSTANTS.SOLDIERS[g_players[g_myId].soldiers[i].entity.type].MOVES;
+			if (g_players[g_myId]) {
+				for (var i=0;i<g_players[g_myId].soldiers.length;i++) {
+					if (g_players[g_myId].soldiers[i]) {
+						g_players[g_myId].soldiers[i].entity.movesLeft = gameDefs.CONSTANTS.SOLDIERS[g_players[g_myId].soldiers[i].entity.type].MOVES;
+					}
 				}
 			}
 			// re-select selected unit
@@ -566,6 +646,9 @@ function initComm() {
 	});
 	
 	g_socket.on('UPDATE', function (data) {
+		if (!g_players[data.playerId]) {
+			return;
+		}
 		g_players[data.playerId].soldiers[data.id].str = data.str;
 		g_players[data.playerId].soldiers[data.id].xp = data.xp;
 		// do soldier update

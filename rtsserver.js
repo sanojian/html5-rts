@@ -32,6 +32,7 @@ io.sockets.on('connection', function (socket) {
 			g_playerMap[data] = id;
 			g_players[id] = { 
 				playerId: id,
+				name: data,
 				soldiers: [
 					{ id: 0, playerId: id, type: 'infantry', xp: 0, str: 8, x: 5, y: 2*id+1 },
 					{ id: 1, playerId: id, type: 'ranged', xp: 0, str: 8, x: 6, y: 2*id+1 },
