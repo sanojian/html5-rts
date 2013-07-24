@@ -20,7 +20,7 @@
 		'0gggtggggggggggggmggttssmmssttggvghhgggggggggggggggg0',
 		'0ggggggggggmvggggggttssmcmttgggggggmggggttgggggggggg0',
 		'0ggggggggggggggggmggttssmgsstttggghggggggtttgggggggg0',
-		'0ggggggggmgggggggggggggsstgthgttvgggggggggtggggggggg0',
+		'0ggggggggmgggggggggggggssgtthgttvgggggggggtggggggggg0',
 		'0gggggggggggggggggggggsttgggggmggggggggggggggggggggg0',
 		'0gggggggggggggggtvgggggggghgggggggggttgggggggggggggg0',
 		'0ggggggggggggg000tgggtggggvggggggggtttgggggggggggggg0',

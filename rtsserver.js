@@ -8,6 +8,7 @@ var g_gameDefs = require('./client/game_defs');
 var g_map = require('./client/map');
 
 var g_players = {};
+var g_Resets = 0;
 var g_playerMap = {};
 var g_nextId = 1;
 var MODE_COMBAT = 0;
@@ -21,6 +22,29 @@ io.configure(function () {
   io.set("polling duration", 10); 
 });
 
+function initNewPlayer(id, name) {
+	var startX = g_Resets > (g_map.MAP.length - 2) ? g_map.MAP[0].length - 10 : 4;
+	var startY = (g_Resets % ((g_map.MAP.length - 2))) * 3 + 3;
+	console.log(startY);
+	
+	g_players[id] = { 
+		playerId: id,
+		name: name,
+		soldiers: [
+			{ id: 0, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX, y: startY },
+			{ id: 1, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+1, y: startY },
+			{ id: 2, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+1, y: startY+1 },
+			{ id: 3, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+2, y: startY+1 },
+			{ id: 4, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+3, y: startY+1 },
+			{ id: 5, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+2, y: startY },
+			{ id: 6, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX+3, y: startY }
+		]
+	};
+	
+	g_Resets = (g_Resets + 1) % ((g_map.MAP.length - 2) * 2);
+
+}
+
 io.sockets.on('connection', function (socket) {
 	var id = -1;
 
@@ -30,16 +54,21 @@ io.sockets.on('connection', function (socket) {
 			// new player
 			id = g_nextId++;
 			g_playerMap[data] = id;
-			g_players[id] = { 
-				playerId: id,
-				name: data,
-				soldiers: [
-					{ id: 0, playerId: id, type: 'infantry', xp: 0, str: 8, x: 5, y: 2*id+1 },
-					{ id: 1, playerId: id, type: 'ranged', xp: 0, str: 8, x: 6, y: 2*id+1 },
-					{ id: 2, playerId: id, type: 'cavalry', xp: 0, str: 8, x: 7, y: 2*id+1 }
-				]
-			};
+			initNewPlayer(id, data);
 		}
+		else {
+			var hasSoldiers = false;
+			for (var i=0;i<g_players[id].soldiers.length;i++) {
+				if (g_players[id].soldiers[i]) {
+					hasSoldiers = true;
+				}
+			}
+			if (!hasSoldiers) {
+				// no more soliders, re-init
+				initNewPlayer(id, data);
+			}
+		}
+		
 		// give player their id
 		socket.emit('GET_ID', { playerId: id });
 	
@@ -170,23 +199,24 @@ var doGameLoop = function() {
 				}
 			}
 		}
-	}
-
-	// heal units in cities
-	for (var playerId in g_players) {
-		for (var i=0;i<g_players[playerId].soldiers.length;i++) {
-			var unit = g_players[playerId].soldiers[i];
-			
-			if (unit) {
-				var terrain = g_map.MAP[unit.y].charAt(unit.x);
-				if (terrain == 'v' || terrain == 'c') {
-					// heal unit
-					unit.str = Math.min(8, unit.str + (terrain == 'v' ? 1 : 1));
-					io.sockets.emit('UPDATE', unit);
+		// heal units in cities
+		for (var playerId in g_players) {
+			for (var i=0;i<g_players[playerId].soldiers.length;i++) {
+				var unit = g_players[playerId].soldiers[i];
+				
+				if (unit) {
+					var terrain = g_map.MAP[unit.y].charAt(unit.x);
+					if (terrain == 'v' || terrain == 'c') {
+						// heal unit
+						unit.str = Math.min(8, unit.str + (terrain == 'v' ? 1 : 1));
+						io.sockets.emit('UPDATE', unit);
+					}
 				}
 			}
-		}
-	}				
+		}				
+		
+	}
+
 	
 	setTimeout(doGameLoop, g_mode == MODE_COMBAT ? 1000 : 5000);
 };

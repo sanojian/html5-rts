@@ -92,6 +92,13 @@ window.addEventListener("load", function(event) {
 		g_players[g_myId].soldiers[g_selectedUnit].entity.doSelect(true);
 	});
 	g_hud.nextButton.hide();
+	g_hud.resetButton = g_hud.raphPaper.set([g_hud.raphPaper.rect(0, g_hud.modeBar.attrs.y + 64, g_hud.raphPaper.width, 32, 4).attr( {fill: '#61A0EF', 'stroke-width': 2, cursor: 'pointer' } )]);
+	g_hud.resetButton.push(g_hud.raphPaper.text(g_hud.nextButton[0].attrs.width/2, g_hud.nextButton[0].attrs.y + g_hud.nextButton[0].attrs.height/2 + 2, 'Reset Army')
+							.attr( { 'font-family': GAME_FONT, 'font-size': '14pt', cursor: 'pointer' }));
+	g_hud.resetButton.click(function() {
+		document.location.href = document.location.href;
+	});
+	g_hud.nextButton.hide();
 	
 	var propsLabel = { 'font-family': GAME_FONT, 'font-size': '10pt', fill: '#AE764B', stroke: '#AE764B' };
 	var propsProp = { 'font-family': GAME_FONT, 'font-size': '10pt', fill: '#C39753', stroke: '#C39753' };
@@ -568,6 +575,15 @@ function initPlayer(key) {
 			g_players[key].soldiers[i].entity.moveTo(g_players[key].soldiers[i].x, g_players[key].soldiers[i].y);
 		}
 	}
+	
+	if (key == g_myId && Crafty('PlayerUnit').length > 0) {
+		g_hud.nextButton.show();
+		g_hud.resetButton.hide();
+	}
+	else if (key == g_myId) {
+		g_hud.nextButton.hide();
+		g_hud.resetButton.show();
+	}
 
 }
 
@@ -669,6 +685,10 @@ function initComm() {
 			if (data.str <= 0) {
 				g_players[data.playerId].soldiers[data.id].entity.destroy();
 				g_players[data.playerId].soldiers[data.id] = undefined;
+				if (Crafty('PlayerUnit').length == 0) {
+					g_hud.nextButton.hide();
+					g_hud.resetButton.show();
+				}
 			}
 			else {
 				g_players[data.playerId].soldiers[data.id].entity.updateStats(data.str, data.xp);
