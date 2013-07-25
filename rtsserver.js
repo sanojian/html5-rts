@@ -8,7 +8,7 @@ var g_gameDefs = require('./client/game_defs');
 var g_map = require('./client/map');
 
 var g_players = {};
-var g_Resets = 0;
+var g_Resets = 15;
 var g_playerMap = {};
 var g_nextId = 1;
 var MODE_COMBAT = 0;
@@ -23,9 +23,8 @@ io.configure(function () {
 });
 
 function initNewPlayer(id, name) {
-	var startX = g_Resets > (g_map.MAP.length - 2) ? g_map.MAP[0].length - 10 : 4;
-	var startY = (g_Resets % ((g_map.MAP.length - 2))) * 3 + 3;
-	console.log(startY);
+	var startX = (g_Resets * 3 + 3) > (g_map.MAP.length - 2) ? g_map.MAP[0].length - 7 : 4;
+	var startY = (g_Resets * 3 + 3) % (g_map.MAP.length - 2) ;
 	
 	g_players[id] = { 
 		playerId: id,
@@ -40,23 +39,26 @@ function initNewPlayer(id, name) {
 			{ id: 6, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX+3, y: startY }
 		]
 	};
-	
-	g_Resets = (g_Resets + 1) % ((g_map.MAP.length - 2) * 2);
-
+	g_Resets = (g_Resets + 1) % (Math.floor(g_map.MAP.length/3 - 1) * 2);
 }
 
 io.sockets.on('connection', function (socket) {
 	var id = -1;
 
 	socket.on('GIVE_NAME', function(data) {
-		id = g_playerMap[data];
-		if (!id) {
+		if (!g_playerMap[data.name]) {
 			// new player
 			id = g_nextId++;
-			g_playerMap[data] = id;
-			initNewPlayer(id, data);
+			g_playerMap[data.name] = { id: id, pass: data.pass };
+			initNewPlayer(id, data.name);
+		}
+		else if (data.pass != g_playerMap[data.name].pass) {
+			// user exists, but wrong password
+			socket.emit('WRONG_PASS', false);
+			return;
 		}
 		else {
+			id = g_playerMap[data.name].id;
 			var hasSoldiers = false;
 			for (var i=0;i<g_players[id].soldiers.length;i++) {
 				if (g_players[id].soldiers[i]) {

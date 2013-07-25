@@ -23,6 +23,18 @@
 				border: 2px solid;
 				border-radius: 6px;
 				background: #E5E6C7;
+				width: 600px;
+				height: 400px;
+			}
+			
+			.afterName {
+				display: none;
+			}
+			.afterPlanet {
+				display: none;
+			}
+			.afterPass {
+				display: none;
 			}
 		</style>
 		
@@ -35,13 +47,41 @@ window.addEventListener("load", function(event) {
 		$('#txtName').val(localStorage.playerName);
 	}
 	
-	$('#txtName').bind('keypress', function(e) {
+	$('#txtName').bind('keyup', function(e) {
 		var code = (e.keyCode ? e.keyCode : e.which);
-		if( code == 13) { //Enter keycode
-			playGame();
+		//if( code == 13) { //Enter keycode
+		//	playGame();
+		//}
+		if ($('#txtName').val()) {
+			$('.afterName').show();
+		}
+		else {
+			$('.afterName').hide();
 		}
 	});
- 
+
+	$('#txtPlanet').bind('keyup', function(e) {
+		var txt = $('#txtPlanet').val().toUpperCase();
+		if (txt == 'EARTH' || txt == 'EARF') {
+			$('.afterPlanet').show();
+		}
+		else {
+			$('.afterPlanet').hide();
+		}
+	});
+
+	$('#txtPass').bind('keyup', function(e) {
+		var code = (e.keyCode ? e.keyCode : e.which);
+		if( $('#txtPass').val() && code == 13) { //Enter keycode
+			playGame();
+		}
+		if ($('#txtPass').val()) {
+			$('.afterPass').show();
+		}
+		else {
+			$('.afterPass').hide();
+		}
+	});
 });
 
 function playGame() {
@@ -50,6 +90,7 @@ function playGame() {
 		name = 'guest' + (Math.random() * 10000).toFixed(0);
 	}
 	localStorage.playerName = name;
+	localStorage.playerPass = $('#txtPass').val();
 	
 	location.href = './client.html';
 }
@@ -71,8 +112,20 @@ function playGame() {
 						<tr>
 							<td align="center"><input type="text" id="txtName" placeholder="name" /></td>
 						</tr>
-						<tr>
-							<td align="center"><button onclick="playGame()" >Play!</button></td>
+						<tr class="afterName">
+							<td align="center">What planet are you from?</td>
+						</tr>
+						<tr class="afterName">
+							<td align="center"><input type="text" id="txtPlanet" placeholder="planet (earth)" /></td>
+						</tr>
+						<tr class="afterPlanet">
+							<td align="center">I also would have accepted 'Earf'<br><br>Password (insecure)?</td>
+						</tr>
+						<tr class="afterPlanet">
+							<td align="center"><input type="text" id="txtPass" placeholder="simple password" /></td>
+						</tr>
+						<tr class="afterPass">
+							<td align="center"><button onclick="playGame()">Play!</button></td>
 						</tr>
 					</table>
 				</td>

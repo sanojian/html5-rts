@@ -98,7 +98,7 @@ window.addEventListener("load", function(event) {
 	g_hud.resetButton.click(function() {
 		document.location.href = document.location.href;
 	});
-	g_hud.nextButton.hide();
+	g_hud.resetButton.hide();
 	
 	var propsLabel = { 'font-family': GAME_FONT, 'font-size': '10pt', fill: '#AE764B', stroke: '#AE764B' };
 	var propsProp = { 'font-family': GAME_FONT, 'font-size': '10pt', fill: '#C39753', stroke: '#C39753' };
@@ -579,6 +579,7 @@ function initPlayer(key) {
 	if (key == g_myId && Crafty('PlayerUnit').length > 0) {
 		g_hud.nextButton.show();
 		g_hud.resetButton.hide();
+		Crafty(Crafty('PlayerUnit')[0]).doSelect(true);
 	}
 	else if (key == g_myId) {
 		g_hud.nextButton.hide();
@@ -588,7 +589,7 @@ function initPlayer(key) {
 }
 
 function initComm() {
-	g_socket.emit('GIVE_NAME', localStorage.playerName);
+	g_socket.emit('GIVE_NAME', { name: localStorage.playerName, pass: localStorage.playerPass });
 
 	g_socket.on('GET_ID', function (data) {
 		g_myId = data.playerId;
@@ -596,6 +597,11 @@ function initComm() {
 		console.log('I am ' + g_myId);
 	});
 
+	g_socket.on('WRONG_PASS', function (data) {
+		document.location.href = './login.html?error=wrongpass';
+	});
+
+	
 	g_socket.on('ENTITY_LIST', function (data) {
 		for (var key in data) {
 			g_players[key] = data[key];
