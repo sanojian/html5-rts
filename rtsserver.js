@@ -30,13 +30,13 @@ function initNewPlayer(id, name) {
 		playerId: id,
 		name: name,
 		soldiers: [
-			{ id: 0, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX, y: startY },
+			{ id: 0, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+2, y: startY },
 			{ id: 1, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+1, y: startY },
-			{ id: 2, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+1, y: startY+1 },
-			{ id: 3, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+2, y: startY+1 },
-			{ id: 4, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+3, y: startY+1 },
-			{ id: 5, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+2, y: startY },
-			{ id: 6, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX+3, y: startY }
+			{ id: 2, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX, y: startY },
+			{ id: 3, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX+3, y: startY },
+			{ id: 4, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+1, y: startY+1 },
+			{ id: 5, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+2, y: startY+1 },
+			{ id: 6, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+3, y: startY+1 }
 		]
 	};
 	g_Resets = (g_Resets + 1) % (Math.floor(g_map.MAP.length/3 - 1) * 2);
