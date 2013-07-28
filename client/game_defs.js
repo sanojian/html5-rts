@@ -3,6 +3,7 @@
     // your code goes here
 
 	exports.CONSTANTS = {
+		TURN_TIME: 10000,
 		SOLDIERS: {
 			infantry: {
 				ATTACK: 2,

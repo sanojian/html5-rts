@@ -14,8 +14,8 @@
 		<script type="text/javascript" src="./map.js"></script>
 		
 		<style>
-			body, html { margin:0; padding: 0; overflow:hidden; font-family:Arial; font-size:20px }
-			#cr-stage { border:2px solid black; margin:5px auto; color:white }
+			body, html { margin:0; padding: 0; overflow:hidden; font-family:Arial; font-size:20px; background: #444444; }
+			#cr-stage { border:2px solid black; margin:5px auto; color:white; }
 			.cover {
 				position: absolute;
 				background: #000000;
@@ -35,12 +35,26 @@
 			   -ms-user-select: none;
 			   user-select: none;
 			}
+			.chat {
+				border: 2px solid;
+				overflow: hidden;
+				
+			}
+			.chatBox {
+				position: absolute;
+				background: #726B7E;
+				border: 2px solid;
+				border-radius: 4px;
+			}
+			.chatName {
+				color: #AE764B;
+			}
 		</style>
   
 		<script>
 		
-//var g_socket = io.connect('http://localhost:5000');
-var g_socket = io.connect('http://stark-ocean-7699.herokuapp.com');
+var g_socket = io.connect('http://localhost:5000');
+//var g_socket = io.connect('http://stark-ocean-7699.herokuapp.com');
 
 
 var g_myId = -1;
@@ -49,7 +63,7 @@ var g_players = {};
 var RENDERING_MODE = 'DOM';//'Canvas';
 var GAME_FONT = "'Press Start 2P', cursive";//'"Arial"';//"Gorditas", cursive';
 var VIEW_WIDTH = 800;
-var VIEW_HEIGHT = 600;
+var VIEW_HEIGHT = 700;
 var TILE_SIZE = 64;
 var MODE_COMBAT = 0;
 var MODE_MOVEMENT = 1;
@@ -73,8 +87,21 @@ window.addEventListener("load", function(event) {
 	g_hud.raphPaper = Raphael('divRaphPaper', 172, 400);
 	g_hud.raphPaper2 = Raphael('divRaphPaper2', $('#cr-stage').width(), 32);
 	var pos = $('#cr-stage').offset();
-	$('#divRaphPaper').css({ top: pos.top + 8, left: pos.left + $('#cr-stage').width() - $('#divRaphPaper').width() - 8 });
+	$('#divRaphPaper').css({ top: pos.top + 8, left: pos.left + $('#cr-stage').width() + 8});// - $('#divRaphPaper').width() - 8 });
 	$('#divRaphPaper2').css({ top: pos.top + $('#cr-stage').height() - 32, left: pos.left });
+	$('#divChatArea').css({ top: pos.top, left: pos.left + - 180, width: 172, height: VIEW_HEIGHT - 32, 'font-family': GAME_FONT, 'font-size': '9pt'  });
+	$('#divChatArea').html('<div style="height: ' + VIEW_HEIGHT + 'px"></div>');
+	$('#txtChat').css({ top: pos.top + VIEW_HEIGHT - 24, left: pos.left + - 180, width: 172, 'font-family': GAME_FONT, 'font-size': '9pt' });
+	$(document).bind('keydown', function(evt) {
+		$('#txtChat').focus();
+	});
+	$('#txtChat').bind('keypress', function(evt) {
+		var code = (evt.keyCode ? evt.keyCode : evt.which);
+		if (code == 13 && $('#txtChat').val()) {	// ENTER
+			g_socket.emit('MESSAGE', $('#txtChat').val());
+			$('#txtChat').val('');
+		}
+	});
 	
 	g_hud.raphPaper.text($('#divRaphPaper').width()/2, 10, 'MountainKing').attr( { 'font-family': GAME_FONT, 'font-size': '14pt', fill: '#D9B75C', stroke: '#C39753', 'stroke-width': 1 });
 	g_hud.miniMap = g_hud.raphPaper.rect(0, 20, g_hud.raphPaper.width, g_hud.raphPaper.width * mapInfo.MAP.length/mapInfo.MAP[0].length, 4).attr( {fill: '#61A0EF', 'stroke-width': 2 } );
@@ -105,25 +132,25 @@ window.addEventListener("load", function(event) {
 	var propsLabel = { 'font-family': GAME_FONT, 'font-size': '10pt', fill: '#AE764B', stroke: '#AE764B' };
 	var propsProp = { 'font-family': GAME_FONT, 'font-size': '10pt', fill: '#C39753', stroke: '#C39753' };
 	
-	var startX = 3*$('#divRaphPaper').width()/4;
+	var startX = $('#divRaphPaper').width()/2;
 	g_hud.terrainInfo = g_hud.raphPaper.set();
 	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX, g_hud.nextButton[0].attrs.y + 64, '???').attr( propsLabel));
-	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX - 32, g_hud.terrainInfo[0].attrs.y + 20, 'D:').attr( propsLabel));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX - 40, g_hud.terrainInfo[0].attrs.y + 20, 'DEF:').attr( propsLabel));
 	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX - 16, g_hud.terrainInfo[0].attrs.y + 20, '?').attr( propsProp));
-	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX + 16, g_hud.terrainInfo[0].attrs.y + 20, 'M:').attr( propsLabel));
-	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX + 32, g_hud.terrainInfo[0].attrs.y + 20, '?').attr( propsProp));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX + 16, g_hud.terrainInfo[0].attrs.y + 20, 'MOV:').attr( propsLabel));
+	g_hud.terrainInfo.push(g_hud.raphPaper.text(startX + 40, g_hud.terrainInfo[0].attrs.y + 20, '?').attr( propsProp));
 	g_hud.terrainInfo.hide();
 	
 	g_hud.unitInfo = g_hud.raphPaper.set();
 	g_hud.unitInfo.push(g_hud.raphPaper.text(startX, g_hud.nextButton[0].attrs.y + 64, '???').attr( propsLabel));
-	g_hud.unitInfo.push(g_hud.raphPaper.text(startX - 32, g_hud.unitInfo[0].attrs.y + 20, 'A:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX - 40, g_hud.unitInfo[0].attrs.y + 20, 'ATK:').attr( propsLabel));
 	g_hud.unitInfo.push(g_hud.raphPaper.text(startX - 16, g_hud.unitInfo[0].attrs.y + 20, '?').attr( propsProp));
-	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 16, g_hud.unitInfo[0].attrs.y + 20, 'M:').attr( propsLabel));
-	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 32, g_hud.unitInfo[0].attrs.y + 20, '?').attr( propsProp));
-	g_hud.unitInfo.push(g_hud.raphPaper.text(startX - 32, g_hud.unitInfo[0].attrs.y + 40, 'D:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 16, g_hud.unitInfo[0].attrs.y + 20, 'MOV:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 40, g_hud.unitInfo[0].attrs.y + 20, '?').attr( propsProp));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX - 40, g_hud.unitInfo[0].attrs.y + 40, 'DEF:').attr( propsLabel));
 	g_hud.unitInfo.push(g_hud.raphPaper.text(startX - 16, g_hud.unitInfo[0].attrs.y + 40, '?').attr( propsProp));
-	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 16, g_hud.unitInfo[0].attrs.y + 40, 'R:').attr( propsLabel));
-	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 32, g_hud.unitInfo[0].attrs.y + 40, '?').attr( propsProp));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 16, g_hud.unitInfo[0].attrs.y + 40, 'RNG:').attr( propsLabel));
+	g_hud.unitInfo.push(g_hud.raphPaper.text(startX + 40, g_hud.unitInfo[0].attrs.y + 40, '?').attr( propsProp));
 	
 	g_hud.winText = g_hud.raphPaper2.text($('#divRaphPaper2').width()/2, 16, 'Hail King ???')
 						.attr({ 'font-family': GAME_FONT, 'font-size': '14pt', fill: '#D9B75C', stroke: '#D9B75C' } );
@@ -154,7 +181,7 @@ function drawMiniTileFor(x, y) {
 		color = '#2F8136';
 	}
 	else if (tile == 'm') {
-		color = '#7E7068';
+		color = '#B19998';
 	}
 	else if (tile == 'v') {
 		color = '#B14E45';
@@ -603,6 +630,11 @@ function initComm() {
 		document.location.href = './login.html?error=wrongpass';
 	});
 
+	g_socket.on('MESSAGE', function (data) {
+		$('#divChatArea').html($('#divChatArea').html() + '<br><span class="chatName">' + data.name + '</span>:' + data.message);
+		$('#divChatArea').scrollTop(1000000);
+	});
+
 	
 	g_socket.on('ENTITY_LIST', function (data) {
 		for (var key in data) {
@@ -629,7 +661,7 @@ function initComm() {
 		
 		var animateTimeBar = function(ticks) {
 			
-			g_hud.modeBar.attr({ width: Math.max(0, g_hud.modeBar.attrs.width - g_hud.raphPaper.width/10) });
+			g_hud.modeBar.attr({ width: Math.max(0, g_hud.modeBar.attrs.width - g_hud.raphPaper.width/(gameDefs.CONSTANTS.TURN_TIME/500)) });
 			if (ticks) {
 				g_hud.animTimer = setTimeout(function() { animateTimeBar(ticks-1);}, 500)
 			}
@@ -651,7 +683,7 @@ function initComm() {
 			
 			// set time meter
 			g_hud.modeBar.attr({ fill: '#499231' });
-			animateTimeBar(10);
+			animateTimeBar(gameDefs.CONSTANTS.TURN_TIME/500);
 
 			$('#divCover').hide();
 		}
@@ -710,5 +742,7 @@ function initComm() {
 	<div id="divCover" class="cover"></div>
 	<div id="divRaphPaper" unselectable="on" class="unselectable" style="position: absolute; z-index: 9990;"></div>
 	<div id="divRaphPaper2" unselectable="on" class="unselectable" style="position: absolute; z-index: 9990;"></div>
+	<div id="divChatArea" class="chat" style="position: absolute; z-index: 9990;"></div>
+	<input type="text" id="txtChat" class="chatBox" />
 </body>
 </html>	

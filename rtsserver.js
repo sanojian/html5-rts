@@ -8,7 +8,7 @@ var g_gameDefs = require('./client/game_defs');
 var g_map = require('./client/map');
 
 var g_players = {};
-var g_Resets = 15;
+var g_Resets = 0;
 var g_playerMap = {};
 var g_nextId = 1;
 var MODE_COMBAT = 0;
@@ -31,12 +31,12 @@ function initNewPlayer(id, name) {
 		name: name,
 		soldiers: [
 			{ id: 0, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+2, y: startY },
-			{ id: 1, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+1, y: startY },
-			{ id: 2, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX, y: startY },
-			{ id: 3, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX+3, y: startY },
-			{ id: 4, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+1, y: startY+1 },
-			{ id: 5, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+2, y: startY+1 },
-			{ id: 6, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+3, y: startY+1 }
+			//{ id: 1, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+1, y: startY },
+			//{ id: 2, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX, y: startY },
+			{ id: 1, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX+3, y: startY },
+			//{ id: 4, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+1, y: startY+1 },
+			{ id: 2, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+2, y: startY+1 },
+			{ id: 3, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+3, y: startY+1 }
 		]
 	};
 	g_Resets = (g_Resets + 1) % (Math.floor(g_map.MAP.length/3 - 1) * 2);
@@ -44,6 +44,7 @@ function initNewPlayer(id, name) {
 
 io.sockets.on('connection', function (socket) {
 	var id = -1;
+	var myName = 'unknown';
 
 	socket.on('GIVE_NAME', function(data) {
 		if (!g_playerMap[data.name]) {
@@ -70,6 +71,7 @@ io.sockets.on('connection', function (socket) {
 				initNewPlayer(id, data);
 			}
 		}
+		myName = data.name;
 		
 		// give player their id
 		socket.emit('GET_ID', { playerId: id });
@@ -79,6 +81,10 @@ io.sockets.on('connection', function (socket) {
 
 	});
 	
+	socket.on('MESSAGE', function (data) {
+		socket.emit('MESSAGE', { name: myName, message: data });
+	});
+
 	// init message handlers
 	socket.on('GET_ENTITIES', function (data) {
 		socket.emit('ENTITY_LIST', g_players);
@@ -220,6 +226,6 @@ var doGameLoop = function() {
 	}
 
 	
-	setTimeout(doGameLoop, g_mode == MODE_COMBAT ? 1000 : 5000);
+	setTimeout(doGameLoop, g_mode == MODE_COMBAT ? 1000 : g_gameDefs.CONSTANTS.TURN_TIME);
 };
 doGameLoop();
