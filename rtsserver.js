@@ -30,13 +30,13 @@ function initNewPlayer(id, name) {
 		playerId: id,
 		name: name,
 		soldiers: [
-			{ id: 0, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+2, y: startY },
+			{ id: 0, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+1, y: startY },
 			//{ id: 1, playerId: id, type: 'ranged', xp: 0, str: 8, x: startX+1, y: startY },
 			//{ id: 2, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX, y: startY },
-			{ id: 1, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX+3, y: startY },
+			{ id: 1, playerId: id, type: 'cavalry', xp: 0, str: 8, x: startX+2, y: startY },
 			//{ id: 4, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+1, y: startY+1 },
-			{ id: 2, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+2, y: startY+1 },
-			{ id: 3, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+3, y: startY+1 }
+			{ id: 2, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+3, y: startY },
+			{ id: 3, playerId: id, type: 'infantry', xp: 0, str: 8, x: startX+0, y: startY }
 		]
 	};
 	g_Resets = (g_Resets + 1) % (Math.floor(g_map.MAP.length/3 - 1) * 2);
@@ -82,7 +82,7 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	socket.on('MESSAGE', function (data) {
-		socket.emit('MESSAGE', { name: myName, message: data });
+		io.sockets.emit('MESSAGE', { name: myName, message: data });
 	});
 
 	// init message handlers
@@ -126,6 +126,8 @@ var unitAttack = function(unit, bad) {
 	var damage = 0.3 * Math.random() * unit.str * g_gameDefs.CONSTANTS.SOLDIERS[unit.type].ATTACK;
 	var terrain = g_map.MAP[bad.y].charAt(bad.x);
 	var defense = 0.1 * Math.random() * (g_gameDefs.CONSTANTS.SOLDIERS[bad.type].DEFENSE + g_gameDefs.CONSTANTS.TERRAIN[terrain].DEFENSE);
+	unit.attackPlayer = bad.playerId;
+	unit.attackUnit = bad.id;
 	
 	return Math.max(0, Math.floor(damage - defense));
 

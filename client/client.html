@@ -53,8 +53,8 @@
   
 		<script>
 		
-//var g_socket = io.connect('http://localhost:5000');
-var g_socket = io.connect('http://floating-wildwood-1165.herokuapp.com');
+var g_socket = io.connect('http://localhost:5000');
+//var g_socket = io.connect('http://floating-wildwood-1165.herokuapp.com');
 
 
 var g_myId = -1;
@@ -75,6 +75,8 @@ var g_selectedUnit = -1;
 var g_selector = undefined;
 var g_highlights = [];
 var g_mapTiles = [];
+var g_attacks = [];
+var g_attackCursor = 0;
 
 // Initialize everything when the window finishes loading
 window.addEventListener("load", function(event) {
@@ -163,7 +165,7 @@ window.addEventListener("load", function(event) {
 function drawMiniTileFor(x, y) {
 	var tile = mapInfo.MAP[y].charAt(x);
 	var color = '#2F8136';
-	var size = 3;
+	var size = 4;
 	
 	if (tile == '0') {
 		return;
@@ -181,16 +183,16 @@ function drawMiniTileFor(x, y) {
 		color = '#2F8136';
 	}
 	else if (tile == 'm') {
-		color = '#B19998';
+		color = '#867E7F';
 	}
 	else if (tile == 'v') {
-		color = '#B14E45';
+		color = '#8F5030';
 	}
 	else if (tile == 'c') {
 		color = '#D9B75C';
 	}
 	
-	g_hud.raphPaper.rect(8 + x*size, 4 + g_hud.miniMap.attrs.y + y*size, size, size).attr({ 'stroke-width': 0, fill: color });
+	g_hud.raphPaper.rect(2 + x*size, 1 + g_hud.miniMap.attrs.y + y*size, size, size).attr({ 'stroke-width': 0, fill: color });
 }
 
 function doCraftyInitialization() {
@@ -271,7 +273,7 @@ function doCraftyInitialization() {
 			var reachable = getReachableTiles(this, this.movesLeft);
 			toggleReachableTiles(true, reachable);
 			if (bCenter) {
-				g_hud.miniMapScreen.attr({ x: 8 + this.locX*3 - g_hud.miniMapScreen.attrs.width/2, y: 4 + g_hud.miniMap.attrs.y + this.locY*3 - g_hud.miniMapScreen.attrs.height/2 });
+				g_hud.miniMapScreen.attr({ x: 8 + this.locX*4 - g_hud.miniMapScreen.attrs.width/2, y: 4 + g_hud.miniMap.attrs.y + this.locY*4 - g_hud.miniMapScreen.attrs.height/2 });
 
 				// pan camera to unit
 				var new_x = this.x + this.w / 2 - Crafty.viewport.width / 2 + Crafty.viewport.x;
@@ -364,8 +366,11 @@ function doCraftyInitialization() {
 		
 		for (var i=0;i<100;i++) {
 			g_highlights.push(Crafty.e('2D, ' + RENDERING_MODE + ', highlight, MapLoc').MapLoc());
-			g_highlights.visible = false;
-			
+			g_highlights[g_highlights.length-1].visible = false;
+		}
+		for (var i=0;i<100;i++) {
+			g_attacks.push(Crafty.e('2D, ' + RENDERING_MODE + ', attack'));
+			g_attacks[g_attacks.length-1].visible = false;
 		}
 		
 		g_selector = Crafty.e('2D, ' + RENDERING_MODE + ', selector').attr({ z : 5 });
@@ -402,6 +407,9 @@ function doCraftyInitialization() {
 
 			Crafty.sprite(TILE_SIZE, './images/selector.png', {
 				selector: [0, 0]
+			});
+			Crafty.sprite(TILE_SIZE, './images/attack.png', {
+				attack: [0, 0]
 			});
 			Crafty.sprite(TILE_SIZE, './images/highlight.png', {
 				highlight: [0, 0]
@@ -547,7 +555,12 @@ function hideHighlights() {
 	for (var i=0; i < g_highlights.length; i++) {
 		g_highlights[i].attr({ visible:false, x: 0, y: 0 });
 	}
+}
 
+function hideAttacks() {
+	for (var i=0; i < g_attacks.length; i++) {
+		g_attacks[i].attr({ visible:false, x: 0, y: 0 });
+	}
 }
 
 function toggleReachableTiles(bHighlight, reachable)
@@ -600,6 +613,9 @@ function initPlayer(key) {
 					g_players[key].soldiers[i].entity = Crafty.e('2D, ' + RENDERING_MODE + ',Soldier, ' + g_players[key].soldiers[i].type + '_evil' )
 						.Soldier(g_players[key].soldiers[i].str, g_players[key].soldiers[i].xp, g_players[key].soldiers[i].type, key);
 				}
+				g_players[key].soldiers[i].blip = g_hud.raphPaper.rect(3 + g_players[key].soldiers[i].x*4, 2 + g_hud.miniMap.attrs.y + g_players[key].soldiers[i].y*4, 2, 2)
+													.attr({ 'stroke-width': 0, fill: (key == g_myId ? '#E5E6C7' : '#E43C3C') });
+
 			}
 			g_players[key].soldiers[i].entity.moveTo(g_players[key].soldiers[i].x, g_players[key].soldiers[i].y);
 		}
@@ -668,6 +684,13 @@ function initComm() {
 		};
 
 		if (data == MODE_MOVEMENT) {
+			// hide all attacks
+			setTimeout(function() {
+				var attacks = Crafty('attack');
+				for (var i=0;i<attacks.length;i++) {
+					Crafty(attacks[i]).visible = false;
+				}
+			}, 1000);
 			// give all units their movement points back
 			if (g_players[g_myId]) {
 				for (var i=0;i<g_players[g_myId].soldiers.length;i++) {
@@ -706,6 +729,8 @@ function initComm() {
 		g_players[data.playerId].soldiers[data.id].y = data.y
 		
 		g_players[data.playerId].soldiers[data.id].entity.moveTo(data.x, data.y);
+		g_players[data.playerId].soldiers[data.id].blip.attr( { x: 3 + g_players[data.playerId].soldiers[data.id].x*4, 
+																y: 2 + g_hud.miniMap.attrs.y + g_players[data.playerId].soldiers[data.id].y*4 });	
 		
 		if (data.playerId == g_myId && g_selectedUnit != -1) {
 			// re-select selected unit
@@ -720,10 +745,23 @@ function initComm() {
 		}
 		g_players[data.playerId].soldiers[data.id].str = data.str;
 		g_players[data.playerId].soldiers[data.id].xp = data.xp;
+		// show attacker
+		if (g_players[data.attackPlayer] && g_players[data.attackPlayer].soldiers[data.attackUnit] && g_players[data.attackPlayer].soldiers[data.attackUnit].entity) {
+			var attacker = g_players[data.attackPlayer].soldiers[data.attackUnit].entity;
+			g_attacks[g_attackCursor].attr({ x: attacker.x, y: attacker.y, z: attacker.z - 1, visible: true });
+			g_attackCursor = (g_attackCursor + 1) % g_attacks.length;
+		}
+		
 		// do soldier update
 		if (g_players[data.playerId].soldiers[data.id].entity) {
+			// show attack
+			var unit = g_players[data.playerId].soldiers[data.id].entity;
+			g_attacks[g_attackCursor].attr({ x: unit.x, y: unit.y, z: unit.z - 1, visible: true });
+			g_attackCursor = (g_attackCursor + 1) % g_attacks.length;
+
 			if (data.str <= 0) {
 				g_players[data.playerId].soldiers[data.id].entity.destroy();
+				g_players[data.playerId].soldiers[data.id].blip.remove();
 				g_players[data.playerId].soldiers[data.id] = undefined;
 				if (Crafty('PlayerUnit').length == 0) {
 					g_hud.nextButton.hide();
