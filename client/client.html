@@ -329,7 +329,7 @@ function doCraftyInitialization() {
 			// check if winner
 			if (mapInfo.MAP[this.locY] && mapInfo.MAP[this.locY].charAt(this.locX) == 'c') {
 				// winner!
-				g_hud.winText.attr({ text: 'Hail King ' + g_players[this.playerId].name.name + '!' });
+				g_hud.winText.attr({ text: 'Hail King ' + g_players[this.playerId].name + '!' });
 			}
 		},
 		
@@ -341,7 +341,7 @@ function doCraftyInitialization() {
 	
 		showInfo: function() {
 			g_hud.terrainInfo.hide();
-			g_hud.unitInfo[0].attr({ text: g_players[this.playerId].name.name });
+			g_hud.unitInfo[0].attr({ text: g_players[this.playerId].name });
 			g_hud.unitInfo[2].attr({ text: gameDefs.CONSTANTS.SOLDIERS[this.type].ATTACK });
 			g_hud.unitInfo[4].attr({ text: gameDefs.CONSTANTS.SOLDIERS[this.type].MOVES });
 			g_hud.unitInfo[6].attr({ text: gameDefs.CONSTANTS.SOLDIERS[this.type].DEFENSE });
